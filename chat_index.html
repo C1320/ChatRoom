@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <script src="./js/jquery-3.6.0.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+        <link rel="stylesheet" href="css/chat_style.css" />
+    <script src="js/chat_index.js" type="text/javascript">
+    </script>
+      <script>
+          const account_test = /^\d{6,16}$/,
+              nameTest = /^[\u4e00-\u9fa5]{1,6}$/;
+          //实时监测登录账号格式是否正确
+          function detection() {
+                  const account = document.getElementById('username').value
+              if(account.length>0){
+                  if(account_test.test(account)){
+                      $('#correct1').html("√");
+                      //密码可以输入
+                      document.getElementById("passwd").disabled = false;
+                      //按钮是否可用
+                      if(document.getElementById("passwd").value>=6){
+                          document.getElementById("button_login").style.display="block";
+                      }
+                      else {
+                          document.getElementById("button_login").style.display="none";
+                      }
+                  }
+                  else {
+                      $('#correct1').html("x");
+                      // document.getElementById('logon_frame correct').innerHTML = "x";
+                      document.getElementById("passwd").disabled = true;
+                      document.getElementById("button_login").style.display="none";
+                  }
+              }
+              else {
+                  $('#correct1').html("");
+                  // document.getElementById('logon_frame correct').innerHTML = "";
+                  document.getElementById("passwd").disabled = true;
+                  document.getElementById("button_login").style.display="none";
+              }
+          }
+      //    检测账号密码是否已输入
+          function pwd_detect() {
+              const pwd = document.getElementById("passwd").value
+              if(pwd.length>=6){
+                  //按钮是否可用
+                  if(document.getElementById('username').value>=6){
+                      document.getElementById("button_login").style.display="block";
+                  }
+                  else {
+                      document.getElementById("button_login").style.display="none";
+                  }
+              }
+              else {
+                  document.getElementById("button_login").style.display="none";
+              }
+          }
+          function detectionNickname() {
+              //昵称是否全为汉字
+              const reName=$("#re-name").val()
+              if(reName.length>0){
+                  if(nameTest.test(reName)){
+                      $('#correct2').html("√");
+                      if(account_test.test($("#re-username").val())&&$("#re-passwd").val()>=6&&$("#re-ack_passwd").val()>=6
+                      &&$("#re-passwd").val()===$("#re-ack_passwd").val()){
+                          document.getElementById("button_register").style.display="block";
+                      }
+                      else {
+                          document.getElementById("button_register").style.display="none";
+                      }
+                  }
+                  else {
+                      $('#correct2').html("x");
+                      document.getElementById("button_register").style.display="none";
+                  }
+              }
+              else {
+                  $('#correct2').html("");
+                  document.getElementById("button_register").style.display="none";
+              }
+
+          }
+          function RegisterAccountTest() {
+              const ReName = $("#re-username").val()
+              if(ReName.length>0){
+                  if(account_test.test(ReName)){
+                      $('#correct3').html("√");
+                      if(nameTest.test($("#re-name").val())&&$("#re-passwd").val()>=6&&$("#re-ack_passwd").val()>=6
+                          &&$("#re-passwd").val()===$("#re-ack_passwd").val()){
+                          document.getElementById("button_register").style.display="block";
+                      }
+                  }
+                  else {
+                      $('#correct3').html("x");
+                      document.getElementById("button_register").style.display="none";
+                  }
+
+              }
+              else {
+                  $('#correct3').html("");
+                  document.getElementById("button_register").style.display="none";
+              }
+          }
+          function RegisterPasswdtTest() {
+              const passwd = $("#re-passwd").val()
+              if(passwd.length>=6){
+                  $('#correct4').html("√");
+                  if(nameTest.test($("#re-name").val())&&account_test.test($("#re-username").val())&&$("#re-ack_passwd").val()>=6
+                      &&$("#re-passwd").val()===$("#re-ack_passwd").val()){
+                      document.getElementById("button_register").style.display="block";
+                  }
+              }
+              else if(0<passwd<6) {
+                  $('#correct4').html("x");
+                  document.getElementById("button_register").style.display="none";
+              }
+              else {
+                  $('#correct4').html("");
+                  document.getElementById("button_register").style.display="none";
+              }
+          }
+          function RegisterAckPasswdtTest() {
+              const AckPasswd = $("#re-ack_passwd").val()
+              if(AckPasswd.length>=6&&AckPasswd===$("#re-passwd").val()){
+                  $('#correct5').html("√");
+                  if(nameTest.test($("#re-name").val())&&account_test.test($("#re-username").val())){
+                      document.getElementById("button_register").style.display="block";
+                  }
+              }
+              else if(AckPasswd===''){
+                  $('#correct5').html("");
+                  document.getElementById("button_register").style.display="none";
+              }
+              else {
+                  $('#correct5').html("x");
+                  document.getElementById("button_register").style.display="none";
+              }
+          }
+          function chatText() {
+            if(document.getElementById("text").value.trim()!==''){
+                  document.getElementById("sendMsg").disabled=false;
+            }
+            else {
+              document.getElementById("sendMsg").disabled=true;
+            }
+          }
+
+      </script>
+    <title>十三系统</title>
+  </head>
+  <body>
+    <header>
+      <!-- 轮播组件 -->
+      <div class="image-slider">
+          <!--        登录容器-->
+          <div class="container" style="display: block" id="container">
+            <table class="content" id="content_login" style="display: block">
+              <div id="tab_item">
+                <div id="login_tab" style="color:white;background:  #00DD60">登录系统
+                </div>
+                <div id="register_tab">注册账户
+                </div>
+              </div>
+<!--              登录-->
+              <div class="logon_frame" id="logon_frame">
+                <tr>
+                  <td><input placeholder="账号（6-16个数字）" type="search" style="width: 200px;height: 30px;"  id="username" oninput="detection();" onpropertychange="detection();">
+                    <td><div class="correct1" id="correct1"></div></td>
+                  </td>
+                </tr>
+                <tr>
+                  <td><br></td>
+                </tr>
+                <tr>
+                  <td><input placeholder="密码（长度必须>=6" type="password" style="width: 200px;height: 30px;"  id="passwd" disabled="disabled" oninput="pwd_detect();" onpropertychange="pwd_detect();">
+                  </td>
+                </tr>
+                <tr>
+                  <td><br></td>
+                </tr>
+                <tr>
+                  <td><input type="button" style="width: 200px;height: 30px; display: none"  class="button_login" value="登录" id="button_login"></td>
+                </tr>
+              </div>
+<!--              注册-->
+
+            </table>
+          <table class="content register-cont" style="display: none" id="content_register">
+            <div class="register_frame">
+              <tr>
+                <td><input placeholder="昵称（1-6个汉字）" type="search" style="width: 200px;height: 30px;"  id="re-name" oninput="detectionNickname();" onpropertychange="detectionNickname();"></td>
+                  <td><div class="correct2" id="correct2"></div></td>
+              </tr>
+              <td><br></td>
+              <tr>
+                <td><input placeholder="账号（6-16个数字）" type="search" style="width: 200px;height: 30px;"  id="re-username" oninput="RegisterAccountTest();" onpropertychange="RegisterAccountTest();"></td>
+                  <td><div class="correct3" id="correct3"></div></td>
+              </tr>
+              <td><br></td>
+              <tr>
+                <td><input placeholder="密码（长度必须>=6）" type="password" style="width: 200px;height: 30px;"  id="re-passwd" oninput="RegisterPasswdtTest();" onpropertychange="RegisterPasswdtTest();"></td>
+                  <td><div class="correct4" id="correct4"></div></td>
+              </tr>
+              <td><br></td>
+              <tr>
+                <td><input placeholder="确认密码" type="password" style="width: 200px;height: 30px;"  class="re-ack_passwd" id="re-ack_passwd" oninput="RegisterAckPasswdtTest();" onpropertychange="RegisterAckPasswdtTest();"></td>
+                  <td><div class="correct5" id="correct5"></div></td>
+              </tr>
+              <tr>
+                <td><br></td>
+              </tr>
+              <tr>
+                <td><input type="button" style="width: 200px;height: 30px;display: none"  class="button_register" id="button_register" value="确定"></td>
+              </tr>
+            </div>
+          </table>
+          </div>
+        <!-- 第一张幻灯片 -->
+        <div class="slide current">
+          <!-- 图片 -->
+          <img
+            class="image"
+            src="./image/back6.jpg"
+          />
+        </div>
+        <!-- 第一张幻灯片 -->
+        <div class="slide">
+          <!-- 图片 -->
+          <img
+            class="image"
+            src="./image/back5.jpg"
+          />
+        </div>
+        <!-- 第一张幻灯片 -->
+        <div class="slide">
+          <!-- 图片 -->
+          <img
+            class="image"
+            src="./image/back7.jpg"
+          />
+        </div>
+        <!-- 第一张幻灯片 -->
+        <div class="slide">
+          <!-- 图片 -->
+          <img
+                  class="image"
+                  src="./image/back8.jpg"
+          />
+        </div>
+        <!-- 控制按钮 -->
+        <div id="prev"><i class="fas fa-chevron-left"></i></div>
+        <div id="next"><i class="fas fa-chevron-right"></i></div>
+      </div>
+<!--      聊天容器-->
+      <div class="chat-content" style="display:none;" id="chat-content">
+<!--        左侧-->
+        <div class="left-content">
+          <!--        个人信息-->
+         <div class="information">
+<!--             头像-->
+            <div class="head-portrait">
+              <img src="image/avatar07.jpg" alt="" class="img avatar_url">
+            </div>
+<!--           昵称-->
+           <div class="nickname">
+             <span>昵称</span>
+           </div>
+<!--            用户名-->
+            <div class="username">
+              <span></span>
+            </div>
+<!--           签名-->
+           <div class="signature">
+             <span>这人很懒，什么都没有留下！</span>
+           </div>
+          </div>
+          <!--        在线人数-->
+          <div class="online-header">
+<!--            <span>在线（0）</span>-->
+          </div>
+          <!--        显示在线人信息-->
+    <ul id="user-ul">
+<!--        <li class="user">-->
+<!--                <div class="user-list-photo">-->
+<!--                    <img src="image/avatar07.jpg" alt="" class="img avatar_url">-->
+<!--                </div>-->
+<!--                &lt;!&ndash;              在线用户名&ndash;&gt;-->
+<!--                <div class="user-list-name">-->
+<!--                    十三-->
+<!--                </div>-->
+<!--        </li>-->
+
+    </ul>
+        </div>
+<!--        聊天区-->
+  <div class="right-content">
+
+  <!--       聊天显示 -->
+  <div class="show-header">
+      <span>十三</span>
+  </div>
+  <!--        聊天内容-->
+  <div class="chat-bd">
+  </div>
+  <!--        文件-->
+  <div class="chat-file"></div>
+  <!--        文本-->
+  <div class="chat-text">
+      <input type="text" class="text" id="text" placeholder="请输入内容" oninput="chatText();" onpropertychange="chatText();">
+      <input type="button" class="sendMsg" id="sendMsg" value="发送" disabled="disabled">
+  </div>
+</div>
+      </div>
+    </header>
+    <!-- 引入JS -->
+  </body>
+</html>
